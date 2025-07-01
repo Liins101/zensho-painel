@@ -1,81 +1,106 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Painel de Picking - ZenshoApp</title>
-    <script type="module">
-        // Importa módulos Firebase v9
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-
-        // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDDVcTC0xlL3COftXAOKjHi_S5gh68JQfQ",
-            authDomain: "zenshopicking.firebaseapp.com",
-            databaseURL: "https://zenshopicking-default-rtdb.firebaseio.com",
-            projectId: "zenshopicking",
-            storageBucket: "zenshopicking.firebasestorage.app",
-            messagingSenderId: "558877801932",
-            appId: "1:558877801932:web:f7539d77d315b4fdc2b169",
-            measurementId: "G-JE4QN15V52"
-        };
-
-        // Inicializa Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        const registrosRef = ref(database, 'RegistrosPicking');
-
-        // Atualiza a lista em tempo real
-        const lista = document.addEventListener("DOMContentLoaded", () => {
-            const ul = document.getElementById('lista-registros');
-
-            onValue(registrosRef, (snapshot) => {
-                ul.innerHTML = ""; // limpa a lista
-
-                if (!snapshot.exists()) {
-                    const vazio = document.createElement("li");
-                    vazio.textContent = "Nenhum registro disponível.";
-                    ul.appendChild(vazio);
-                    return;
-                }
-
-                snapshot.forEach((childSnapshot) => {
-                    const registro = childSnapshot.val();
-                    const li = document.createElement("li");
-                    li.textContent = `🛠 Produção: ${registro.Producao} | Quantidade: ${registro.Quantidade} | Saída: ${registro.Saida}`;
-                    ul.appendChild(li);
-                });
-            });
-        });
-    </script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        li {
-            background-color: #f1f1f1;
-            margin: 8px 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Painel de Registros</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #fff;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 30px;
+      font-size: 36px;
+    }
+    table {
+      margin: 30px auto;
+      width: 80%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 15px;
+      border: 1px solid #444;
+      font-size: 22px;
+    }
+    th {
+      background-color: #333;
+    }
+    tr:nth-child(even) {
+      background-color: #222;
+    }
+  </style>
 </head>
 <body>
-    <h1>📦 Painel de Registros Picking</h1>
-    <ul id="lista-registros">
-        <li>Carregando registros...</li>
-    </ul>
+  <h1>PAINEL DE PICKING</h1>
+  <table id="tabela">
+    <thead>
+      <tr>
+        <th>Produção</th>
+        <th>Quantidade</th>
+        <th>Saída</th>
+      </tr>
+    </thead>
+    <tbody id="corpo-tabela">
+    </tbody>
+  </table>
+
+  <!-- Áudio de notificação -->
+  <audio id="notificacao" src="https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3" preload="auto"></audio>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDVcTC0xlL3COftXAOKjHi_S5gh68JQfQ",
+      authDomain: "zenshopicking.firebaseapp.com",
+      databaseURL: "https://zenshopicking-default-rtdb.firebaseio.com",
+      projectId: "zenshopicking",
+      storageBucket: "zenshopicking.appspot.com",
+      messagingSenderId: "558877801932",
+      appId: "1:558877801932:web:f7539d77d315b4fdc2b169",
+      measurementId: "G-JE4QN15V52"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const tabela = document.getElementById("corpo-tabela");
+    const audio = document.getElementById("notificacao");
+
+    let idsCarregados = new Set(); // controla registros já mostrados
+
+    function adicionarLinha(dado, id) {
+      if (idsCarregados.has(id)) return; // evita duplicar
+
+      const linha = document.createElement("tr");
+
+      const tdProducao = document.createElement("td");
+      tdProducao.textContent = dado.Producao;
+
+      const tdQuantidade = document.createElement("td");
+      tdQuantidade.textContent = dado.Quantidade;
+
+      const tdSaida = document.createElement("td");
+      tdSaida.textContent = dado.Saida;
+
+      linha.appendChild(tdProducao);
+      linha.appendChild(tdQuantidade);
+      linha.appendChild(tdSaida);
+
+      tabela.appendChild(linha);
+
+      idsCarregados.add(id); // salva esse ID como exibido
+
+      // 🔔 Toca som de notificação
+      audio.play();
+    }
+
+    db.ref("RegistrosPicking").on("child_added", (snapshot) => {
+      const id = snapshot.key;
+      const dados = snapshot.val();
+      adicionarLinha(dados, id);
+    });
+  </script>
 </body>
 </html>
