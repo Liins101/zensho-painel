@@ -48,7 +48,7 @@
     </tbody>
   </table>
 
-  <!-- Áudio de notificação -->
+  <!-- 🔔 Áudio de notificação -->
   <audio id="notificacao" src="https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3" preload="auto"></audio>
 
   <script>
@@ -68,12 +68,13 @@
     const tabela = document.getElementById("corpo-tabela");
     const audio = document.getElementById("notificacao");
 
-    let idsCarregados = new Set(); // controla registros já mostrados
+    const linhas = {}; // mapeia ID → elemento <tr>
 
     function adicionarLinha(dado, id) {
-      if (idsCarregados.has(id)) return; // evita duplicar
+      if (linhas[id]) return; // já está exibido
 
       const linha = document.createElement("tr");
+      linha.setAttribute("data-id", id);
 
       const tdProducao = document.createElement("td");
       tdProducao.textContent = dado.Producao;
@@ -89,17 +90,27 @@
       linha.appendChild(tdSaida);
 
       tabela.appendChild(linha);
-
-      idsCarregados.add(id); // salva esse ID como exibido
+      linhas[id] = linha;
 
       // 🔔 Toca som de notificação
       audio.play();
     }
 
+    // Adiciona novos registros
     db.ref("RegistrosPicking").on("child_added", (snapshot) => {
       const id = snapshot.key;
       const dados = snapshot.val();
       adicionarLinha(dados, id);
+    });
+
+    // Remove registros concluídos
+    db.ref("RegistrosPicking").on("child_removed", (snapshot) => {
+      const id = snapshot.key;
+      const linha = linhas[id];
+      if (linha) {
+        linha.remove();
+        delete linhas[id];
+      }
     });
   </script>
 </body>
