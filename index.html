@@ -1,1 +1,81 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel de Picking - ZenshoApp</title>
+    <script type="module">
+        // Importa módulos Firebase v9
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDVcTC0xlL3COftXAOKjHi_S5gh68JQfQ",
+            authDomain: "zenshopicking.firebaseapp.com",
+            databaseURL: "https://zenshopicking-default-rtdb.firebaseio.com",
+            projectId: "zenshopicking",
+            storageBucket: "zenshopicking.firebasestorage.app",
+            messagingSenderId: "558877801932",
+            appId: "1:558877801932:web:f7539d77d315b4fdc2b169",
+            measurementId: "G-JE4QN15V52"
+        };
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const registrosRef = ref(database, 'RegistrosPicking');
+
+        // Atualiza a lista em tempo real
+        const lista = document.addEventListener("DOMContentLoaded", () => {
+            const ul = document.getElementById('lista-registros');
+
+            onValue(registrosRef, (snapshot) => {
+                ul.innerHTML = ""; // limpa a lista
+
+                if (!snapshot.exists()) {
+                    const vazio = document.createElement("li");
+                    vazio.textContent = "Nenhum registro disponível.";
+                    ul.appendChild(vazio);
+                    return;
+                }
+
+                snapshot.forEach((childSnapshot) => {
+                    const registro = childSnapshot.val();
+                    const li = document.createElement("li");
+                    li.textContent = `🛠 Produção: ${registro.Producao} | Quantidade: ${registro.Quantidade} | Saída: ${registro.Saida}`;
+                    ul.appendChild(li);
+                });
+            });
+        });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #f1f1f1;
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📦 Painel de Registros Picking</h1>
+    <ul id="lista-registros">
+        <li>Carregando registros...</li>
+    </ul>
+</body>
+</html>
